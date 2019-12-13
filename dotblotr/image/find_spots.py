@@ -113,10 +113,10 @@ def _make_blob_df(regions: List, label_mapping: Dict, grid_coordinates: np.ndarr
         'blob_label': blob_labels,
         'row': rows,
         'col': cols,
+        'x': x_coords,
+        'y': y_coords,
         'mean_intensity': mean_intensities,
         'area': areas,
-        'x': x_coords,
-        'y': y_coords
     }
 
     blob_df = pd.DataFrame(data)
