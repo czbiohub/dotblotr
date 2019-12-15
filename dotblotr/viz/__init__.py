@@ -1,1 +1,1 @@
-from .plot_spots import plot_zscore
+from .plot_spots import plot_zscore, plot_value

@@ -9,10 +9,22 @@ from dotblotr import BlotData
 GRID_SPACING = 10
 
 
+def _make_blot_plot(x, y, c):
+    f, ax = plt.subplots(figsize=(8, 5))
+    ax.invert_yaxis()
+    sct = ax.scatter(x, y, c=c)
+    cb = f.colorbar(sct)
+    cb.set_label('Z score', rotation=270)
+
+    ax.set_ylabel('Row')
+    ax.set_xlabel('Column')
+
+    return f, ax, cb
+
+
 def plot_zscore(
         blot_df: pd.DataFrame,
-        col_labels: Union[None, List[str]]=None,
-        row_labels: Union[None, List[str]]=None
+        col_label: str = 'mean_intensity',
 ):
     """
     Plot the z score of each spot in a scatter plot.
@@ -21,10 +33,8 @@ def plot_zscore(
     ----------
     blot_df : pd.DataFrame
         A dataframe containing the blot coordinates and intensities
-    col_labels : List[str]
-        A list containing the label for each column.
-    row_labels : List[str]
-        A list containing the label for each row.
+    col_label :  str
+        Label of the column to plot
 
     Returns:
     --------
@@ -41,17 +51,25 @@ def plot_zscore(
     y = blot_df.row.values
 
     # Calculate the z score
-    mean_intensity = blot_df.mean_intensity.values
-    z_score = (mean_intensity - np.mean(mean_intensity)) / np.std(mean_intensity)
+    data = blot_df[col_label].values
+    z_score = (data - np.mean(data)) / np.std(data)
 
     # Plot
-    f, ax = plt.subplots(figsize=(8, 5))
-    ax.invert_yaxis()
-    sct = ax.scatter(x, y, c=z_score)
-    cb = f.colorbar(sct)
-    cb.set_label('Z score', rotation=270)
+    f, ax, cb = _make_blot_plot(x, y, z_score)
 
-    ax.set_ylabel('Row')
-    ax.set_xlabel('Column')
+    return f, ax, cb
+
+
+def plot_value(blot_df: pd.DataFrame, col_label: str):
+
+    # Get the coordinates for the blots
+    x = blot_df.col.values
+    y = blot_df.row.values
+
+    # Calculate the z score
+    data = blot_df[col_label].values
+
+    # Plot
+    f, ax, cb = _make_blot_plot(x, y, data)
 
     return f, ax, cb
