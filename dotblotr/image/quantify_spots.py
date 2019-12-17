@@ -9,6 +9,7 @@ MERGE_COLS = [MERGE_ON, 'mean_intensity']
 
 def quantify_blot_array(
         im_path: str,
+        strip_id: str,
         array_config_path: str,
         assay_config_path: str
 ):
@@ -23,6 +24,8 @@ def quantify_blot_array(
         assay_config=assay_config
     )
 
+    assay_results.insert(loc=0, column='strip_id', value=strip_id)
+
     return assay_results
 
 
@@ -36,7 +39,17 @@ def _compare_to_control(control_blot, probe_blot, assay_config):
     control_df = pd.merge(assay_config, control_df, on=MERGE_ON, how='outer', suffixes=('', ''))
     control_df = control_df.dropna(axis=0)
 
+    # calculate the normalized intensity
     assay_df = pd.merge(control_df, probe_df, on=MERGE_ON, how='outer', suffixes=('_control', '_probe'))
     assay_df['norm_probe_intensity'] = assay_df['mean_intensity_probe'] / assay_df['mean_intensity_control']
+
+    # calculate the positive hit thresholds
+    neg_ctrls = assay_df.loc[assay_df['exp_group'] == 'neg']
+    neg_mean = neg_ctrls.norm_probe_intensity.mean()
+    neg_std = neg_ctrls.norm_probe_intensity.std()
+    assay_df['pos_thresh'] = neg_mean + assay_df['thresh_factor'] * neg_std
+
+    # identify the positive hits
+    assay_df['pos_hit'] = assay_df['norm_probe_intensity'] > assay_df['pos_thresh']
 
     return assay_df

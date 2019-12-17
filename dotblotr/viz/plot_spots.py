@@ -9,12 +9,12 @@ from dotblotr import BlotData
 GRID_SPACING = 10
 
 
-def _make_blot_plot(x, y, c):
+def _make_blot_plot(x, y, c, cb_label):
     f, ax = plt.subplots(figsize=(8, 5))
     ax.invert_yaxis()
     sct = ax.scatter(x, y, c=c)
     cb = f.colorbar(sct)
-    cb.set_label('Z score', rotation=270)
+    cb.set_label(cb_label, rotation=270)
 
     ax.set_ylabel('Row')
     ax.set_xlabel('Column')
@@ -55,7 +55,7 @@ def plot_zscore(
     z_score = (data - np.mean(data)) / np.std(data)
 
     # Plot
-    f, ax, cb = _make_blot_plot(x, y, z_score)
+    f, ax, cb = _make_blot_plot(x, y, z_score, cb_label='z score')
 
     return f, ax, cb
 
@@ -70,6 +70,6 @@ def plot_value(blot_df: pd.DataFrame, col_label: str):
     data = blot_df[col_label].values
 
     # Plot
-    f, ax, cb = _make_blot_plot(x, y, data)
+    f, ax, cb = _make_blot_plot(x, y, data, cb_label=col_label)
 
     return f, ax, cb
