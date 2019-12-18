@@ -73,3 +73,15 @@ def plot_value(blot_df: pd.DataFrame, col_label: str):
     f, ax, cb = _make_blot_plot(x, y, data, cb_label=col_label)
 
     return f, ax, cb
+
+
+def plot_hit_counts(hit_df):
+    # Get the coordinates for the blots
+    x = hit_df.col.values
+    y = hit_df.row.values
+
+    data = hit_df['n_hits'].values
+
+    f, ax, cb = _make_blot_plot(x, y, data, cb_label = 'n_hits')
+
+    return f, ax, cb

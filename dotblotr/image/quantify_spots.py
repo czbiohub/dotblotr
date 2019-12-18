@@ -1,3 +1,5 @@
+from os import path
+
 import pandas as pd
 
 from .find_spots import get_intensities, get_intensities_from_mask
@@ -24,7 +26,10 @@ def quantify_blot_array(
         assay_config=assay_config
     )
 
-    assay_results.insert(loc=0, column='strip_id', value=strip_id)
+    assay_id = path.split(assay_config_path)[-1]
+    assay_results.insert(loc=0, column='assay_id', value=assay_id)
+
+    assay_results.insert(loc=1, column='strip_id', value=strip_id)
 
     return assay_results
 
