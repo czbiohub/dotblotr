@@ -5,7 +5,7 @@ import pandas as pd
 from .find_spots import get_intensities, get_intensities_from_mask
 from .io import open_rgb
 
-MERGE_ON = 'blot_label'
+MERGE_ON = 'dot_name'
 MERGE_COLS = [MERGE_ON, 'mean_intensity']
 
 
@@ -52,9 +52,9 @@ def _compare_to_control(control_blot, probe_blot, assay_config):
     neg_ctrls = assay_df.loc[assay_df['exp_group'] == 'neg']
     neg_mean = neg_ctrls.norm_probe_intensity.mean()
     neg_std = neg_ctrls.norm_probe_intensity.std()
-    assay_df['pos_thresh'] = neg_mean + assay_df['thresh_factor'] * neg_std
+    assay_df['positive_threshold'] = neg_mean + assay_df['zscore_threshold'] * neg_std
 
     # identify the positive hits
-    assay_df['pos_hit'] = assay_df['norm_probe_intensity'] > assay_df['pos_thresh']
+    assay_df['pos_hit'] = assay_df['norm_probe_intensity'] > assay_df['positive_threshold']
 
     return assay_df

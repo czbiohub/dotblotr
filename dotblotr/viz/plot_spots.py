@@ -76,12 +76,17 @@ def plot_value(blot_df: pd.DataFrame, col_label: str):
 
 
 def plot_hit_counts(hit_df):
-    # Get the coordinates for the blots
-    x = hit_df.col.values
-    y = hit_df.row.values
-
-    data = hit_df['n_hits'].values
-
+    # plot the positive hits
+    pos_hit_df = hit_df.loc[hit_df['n_hits'] > 0]
+    x = pos_hit_df.col.values
+    y = pos_hit_df.row.values
+    data = pos_hit_df['n_hits'].values
     f, ax, cb = _make_blot_plot(x, y, data, cb_label = 'n_hits')
+
+    # plot the negative dots
+    neg_hit_df = hit_df.loc[hit_df['n_hits'] == 0]
+    neg_x = neg_hit_df.col.values
+    neg_y = neg_hit_df.row.values
+    ax.scatter(neg_x, neg_y, facecolors='white', edgecolors='black')
 
     return f, ax, cb

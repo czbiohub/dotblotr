@@ -2,10 +2,10 @@
 - **strip**: the membrane with the phage
 - **dots**: each phage spot on a strip
 - **source plate**: where the phage comes from
-- **dot_location**: name of the dot location (e.g., A1)
+- **dot_name**: name of the dot location (e.g., A1)
 - **exp_group**: the experiment group for the dot. Can be `neg` (negative control), `empty` (no phage), `exp` (experimental group).
 - **mean\_intensity_control**: mean intensity of the dot in the control channel
 -  **mean\_intensity_probe**: mean intensity of the dot in the probe (i.e., phage) channel
 - **positive_threshold**: threshold for setting a dot to be positive (set on a per-strip basis).
-- **zscore\_threshold_factor**: number of standard deviations over negative control mean for setting the threshold.
+- **zscore\_threshold**: number of standard deviations over negative control mean for setting the threshold.
 - **pos_hit**: true if the dot intensity exceeds the threshold

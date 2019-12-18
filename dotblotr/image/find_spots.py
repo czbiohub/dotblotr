@@ -67,9 +67,9 @@ def _find_label_mapping(regions: List, blot_config: BlotConfig) -> Tuple[Dict, n
         c = col_indices[col_index]
         col_label = blot_config.get_col_label(c)
 
-        blot_label = row_label + col_label
+        dot_name = row_label + col_label
 
-        label_mapping[blob_labels[i]] = blot_label
+        label_mapping[blob_labels[i]] = dot_name
 
         grid_coordinates.append([r, c])
 
@@ -80,7 +80,7 @@ def _make_blob_df(regions: List, label_mapping: Dict, grid_coordinates: np.ndarr
 
     areas = [r.area for r in regions]
     mean_intensities = [r.mean_intensity for r in regions]
-    blot_labels = [label_mapping[r.label] for r in regions]
+    dot_names = [label_mapping[r.label] for r in regions]
     blob_labels = [r.label for r in regions]
 
     rows = grid_coordinates[:, 0]
@@ -91,7 +91,7 @@ def _make_blob_df(regions: List, label_mapping: Dict, grid_coordinates: np.ndarr
     x_coords = coords[:, 1]
 
     data = {
-        'blot_label': blot_labels,
+        'dot_name': dot_names,
         'blob_label': blob_labels,
         'row': rows,
         'col': cols,
