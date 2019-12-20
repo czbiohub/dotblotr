@@ -1,6 +1,6 @@
 import glob
 from typing import List
-from os import path
+import os
 
 from dotblotr.image import quantify_blot_array
 import pandas as pd
@@ -37,10 +37,9 @@ def process_dir(
         filename_pattern: str = '*.tif'
 ) -> pd.DataFrame:
 
-    img_pattern = path.join(dir_path, filename_pattern)
+    img_pattern = os.path.join(dir_path, filename_pattern)
     im_paths = glob.glob(img_pattern)
-
-    strip_ids = [im.split('/')[-1].split('.')[0] for im in im_paths]
+    strip_ids = [im.split(os.sep)[-1].split('.')[0] for im in im_paths]
     results_table = process_im_list(im_paths, strip_ids, blot_config_path, assay_config_path)
 
     return results_table
