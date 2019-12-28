@@ -4,6 +4,7 @@ import os
 
 from dotblotr.image import quantify_blot_array
 import pandas as pd
+from tqdm import tqdm
 
 
 def process_im_list(
@@ -15,7 +16,7 @@ def process_im_list(
     assay_results = []
 
     # Run through each blot
-    for im_path, strip_id in zip(im_paths, strip_ids):
+    for im_path, strip_id in tqdm(zip(im_paths, strip_ids), total=len(strip_ids)):
         result = quantify_blot_array(
             im_path=im_path,
             strip_id=strip_id,
