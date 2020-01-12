@@ -1,3 +1,5 @@
+from typing import List, Union
+
 import pandas as pd
 
 
@@ -12,7 +14,7 @@ SPOT_DATA_COLS = [
     'col'
 ]
 
-def calc_hit_counts(results_table):
+def calc_hit_counts(results_table:pd.DataFrame, aux_columns:Union[None, List[str]] = None):
     assays = results_table.assay_id.unique()
 
     hit_dfs = []
@@ -30,7 +32,11 @@ def calc_hit_counts(results_table):
         hit_counts_df = pd.concat([hit_counts_df, neg_dots_df], ignore_index=True)
 
         # get data about the positive spots
-        hit_spot_data = assay_results[SPOT_DATA_COLS].drop_duplicates()
+        if aux_columns is not None:
+            cols_to_transfer = SPOT_DATA_COLS + aux_columns
+        else:
+            cols_to_transfer = SPOT_DATA_COLS
+        hit_spot_data = assay_results[cols_to_transfer].drop_duplicates()
 
         result = hit_spot_data.join(hit_counts_df.set_index('dot_name'), on='dot_name')
         hit_dfs.append(result)
