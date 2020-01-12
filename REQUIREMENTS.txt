@@ -5,4 +5,5 @@ opencv-python
 pandas
 scikit-image
 scikit-learn
+scipy
 tqdm
