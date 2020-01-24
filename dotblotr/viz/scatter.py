@@ -44,7 +44,8 @@ def plot_hit_grid(
 
         for j, dot_row in dot_table.iterrows():
             if dot_row['pos_hit']:
-                names.append(dot_row[x_label])
+                #names.append(dot_row[x_label])
+                names.append(dot_row['dot_name'])
                 strip_id_indices.append(dot_row['strip_id'])
                 counts.append(count)
 
@@ -57,14 +58,26 @@ def plot_hit_grid(
 
     plt.draw()
 
-    norm = Normalize(vmin=1, vmax=5)
+    norm = Normalize(vmin=1, vmax=hit_table['n_hits'].max())
+    # for t in ax.get_xticklabels():
+    #     tick_name = t.get_text()
+    #     dot_name = results_table.loc[results_table[x_label] == tick_name].dot_name.values[0]
+    #     n_hits = hit_table.loc[hit_table['dot_name'] == dot_name].n_hits.values[0]
+    #     c = sc.cmap(norm(n_hits))
+    #     t.set_color(c)
+    label_names = []
     for t in ax.get_xticklabels():
-        tick_name = t.get_text()
-        dot_name = results_table.loc[results_table[x_label] == tick_name].dot_name.values[0]
+        dot_name = t.get_text()
+        label_names.append(dot_name)
         n_hits = hit_table.loc[hit_table['dot_name'] == dot_name].n_hits.values[0]
         c = sc.cmap(norm(n_hits))
         t.set_color(c)
+        label_names.append(dot_name)
 
+    new_labels = [
+        results_table.loc[results_table['dot_name'] == n][x_label].values[0] for n in label_names
+    ]
+    ax.set_xticklabels(new_labels)
     plt.draw()
 
     return f, ax
