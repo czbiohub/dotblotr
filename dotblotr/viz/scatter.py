@@ -59,7 +59,8 @@ def plot_hit_grid(
 
     norm = Normalize(vmin=1, vmax=5)
     for t in ax.get_xticklabels():
-        dot_name = t.get_text()
+        tick_name = t.get_text()
+        dot_name = results_table.loc[results_table[x_label] == tick_name].dot_name.values[0]
         n_hits = hit_table.loc[hit_table['dot_name'] == dot_name].n_hits.values[0]
         c = sc.cmap(norm(n_hits))
         t.set_color(c)
