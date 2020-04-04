@@ -10,6 +10,9 @@ class BlotConfig:
                 self.config = json.load(read_file)
         else:
             self.config = config
+    @property
+    def spot_params(self):
+        return self.config['spot_params']
 
     @property
     def n_cols(self)->int:

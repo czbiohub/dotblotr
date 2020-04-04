@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
 from skimage import io
-from skimage.filters import threshold_local, median
+from skimage.filters import threshold_otsu, median
 from skimage.measure import label, regionprops
 from skimage.morphology import closing, square, disk, erosion
 from skimage.segmentation import clear_border
@@ -11,24 +11,6 @@ from sklearn.cluster import KMeans
 
 from dotblotr import BlotConfig
 from dotblotr import BlotData
-
-
-def _load_image(im_path: str) -> np.ndarray:
-    """
-    Load an image from a given path
-
-    Parameters:
-    ----------
-    im_path : str
-        File path to an image.
-
-    im : np.ndarray
-        The image
-    """
-
-    im = io.imread(im_path)
-
-    return im
 
 
 def _calc_circularity(region):
@@ -85,9 +67,9 @@ def _find_label_mapping(regions: List, blot_config: BlotConfig) -> Tuple[Dict, n
         c = col_indices[col_index]
         col_label = blot_config.get_col_label(c)
 
-        blot_label = row_label + col_label
+        dot_name = row_label + col_label
 
-        label_mapping[blob_labels[i]] = blot_label
+        label_mapping[blob_labels[i]] = dot_name
 
         grid_coordinates.append([r, c])
 
@@ -98,7 +80,7 @@ def _make_blob_df(regions: List, label_mapping: Dict, grid_coordinates: np.ndarr
 
     areas = [r.area for r in regions]
     mean_intensities = [r.mean_intensity for r in regions]
-    blot_labels = [label_mapping[r.label] for r in regions]
+    dot_names = [label_mapping[r.label] for r in regions]
     blob_labels = [r.label for r in regions]
 
     rows = grid_coordinates[:, 0]
@@ -109,14 +91,14 @@ def _make_blob_df(regions: List, label_mapping: Dict, grid_coordinates: np.ndarr
     x_coords = coords[:, 1]
 
     data = {
-        'blot_label': blot_labels,
+        'dot_name': dot_names,
         'blob_label': blob_labels,
         'row': rows,
         'col': cols,
+        'x': x_coords,
+        'y': y_coords,
         'mean_intensity': mean_intensities,
         'area': areas,
-        'x': x_coords,
-        'y': y_coords
     }
 
     blob_df = pd.DataFrame(data)
@@ -124,18 +106,20 @@ def _make_blob_df(regions: List, label_mapping: Dict, grid_coordinates: np.ndarr
     return blob_df
 
 
-def find_spots(im: np.ndarray) -> Tuple[List, np.ndarray]:
-    BLOCK_SIZE = 101
-    CLOSING_SIZE = 3
-    EROSION_SIZE = 7
-
-    CIRC_THRESH = 0.3
+def find_spots(im: np.ndarray, spot_params: dict) -> Tuple[List, np.ndarray]:
+    med_filt_size = spot_params['med_filt_size']
+    block_size = spot_params['block_size']
+    closing_size = spot_params['closing_size']
+    erosion_size = spot_params['erosion_size']
+    min_area = spot_params['min_area']
+    circ_thresh = spot_params['circ_thresh']
 
     # Binarize image
-    filtered = median(im, square(7))
-    thresh = threshold_local(filtered, block_size=BLOCK_SIZE)
-    bw = closing(filtered > thresh, square(CLOSING_SIZE))
-    eroded_bw = erosion(bw, selem=disk(EROSION_SIZE))
+    filtered = median(im, square(med_filt_size))
+    #thresh = threshold_local(filtered, block_size=block_size)
+    thresh = threshold_otsu(filtered)
+    bw = closing(filtered > thresh, square(closing_size))
+    eroded_bw = erosion(bw, selem=disk(erosion_size))
 
     # Make the label_image
     cleared = clear_border(eroded_bw)
@@ -143,9 +127,9 @@ def find_spots(im: np.ndarray) -> Tuple[List, np.ndarray]:
     regions = regionprops(label_image=label_image, intensity_image=im)
 
     # Filter regions
-    size_filtered = [r for r in regions if r.area > 100]
+    size_filtered = [r for r in regions if r.area > min_area]
     circularity = [_calc_circularity(r) for r in size_filtered]
-    circularity_filtered = [r for c, r in zip(circularity, size_filtered) if c > CIRC_THRESH]
+    circularity_filtered = [r for c, r in zip(circularity, size_filtered) if c > circ_thresh]
 
     # Remove filtered labels from label image
     good_labels = [r.label for r in circularity_filtered]
@@ -160,11 +144,10 @@ def find_spots(im: np.ndarray) -> Tuple[List, np.ndarray]:
     return circularity_filtered, label_image
 
 
-def get_intensities(im_path: str, blot_config_path: str) -> BlotData:
+def get_intensities(im: np.ndarray, blot_config_path: str) -> BlotData:
 
-    im = _load_image(im_path)
-    regions, label_im = find_spots(im)
     blot_config = BlotConfig(config=blot_config_path)
+    regions, label_im = find_spots(im, spot_params=blot_config.spot_params)
 
     label_mapping, grid_coords = _find_label_mapping(regions, blot_config)
 
@@ -174,7 +157,7 @@ def get_intensities(im_path: str, blot_config_path: str) -> BlotData:
         blob_df,
         label_im=label_im,
         blot_config=blot_config,
-        im_path=im_path,
+        raw_im=im,
         label_mapping=label_mapping,
         grid_coords=grid_coords
     )
@@ -182,9 +165,8 @@ def get_intensities(im_path: str, blot_config_path: str) -> BlotData:
     return blob_data
 
 
-def get_intensities_from_mask(im_path: str, blot_data: BlotData) -> BlotData:
+def get_intensities_from_mask(im: np.ndarray, blot_data: BlotData) -> BlotData:
 
-    im = _load_image(im_path)
     label_im = blot_data.label_im
     regions = regionprops(label_im, intensity_image=im)
     df = _make_blob_df(regions, blot_data.label_mapping, blot_data.grid_coords)
@@ -193,11 +175,10 @@ def get_intensities_from_mask(im_path: str, blot_data: BlotData) -> BlotData:
         blob_df=df,
         label_im=label_im,
         blot_config=blot_data.blot_config,
-        im_path=im_path,
+        raw_im=im,
         label_mapping=blot_data.label_mapping,
         grid_coords=blot_data.grid_coords,
-        mask_source=blot_data.im_path
+        mask_raw_im=blot_data.raw_im
     )
 
     return new_blot_data
-
