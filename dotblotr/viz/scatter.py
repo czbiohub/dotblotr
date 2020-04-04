@@ -7,7 +7,8 @@ import pandas as pd
 
 def plot_hit_grid(
         hit_table: pd.DataFrame, results_table: pd.DataFrame,
-        sort_by:Union[str, List[str]]='n_hits', x_label: str ='dot_name'
+        sort_by:Union[str, List[str]] = 'n_hits', x_label: str = 'dot_name',
+        cmap:str = 'inferno',
 ):
     """
     Plot the hits
@@ -26,6 +27,11 @@ def plot_hit_grid(
     x_label : str
         the results table column to use for the name of the dot on the x_label
         (e.g., dot_name for the name of the dot)
+    cmap : str
+        Name of the colormap to be used for the number of hits.
+        The default value is 'inferno'
+        See the matplotlib documation for details:
+        https://matplotlib.org/3.1.1/tutorials/colors/colormaps.html
     """
 
     hit_table.sort_values(by=sort_by, axis=0, inplace=True, ascending=False)
@@ -50,7 +56,7 @@ def plot_hit_grid(
                 counts.append(count)
 
     f, ax = plt.subplots(figsize=(50, 2))
-    sc = ax.scatter(names, strip_id_indices, c=counts, cmap='hsv');
+    sc = ax.scatter(names, strip_id_indices, c=counts, cmap=cmap);
 
     ax.tick_params(axis='x', labelsize=5, rotation=90)
     ax.set_xlabel('spot name')
@@ -72,7 +78,6 @@ def plot_hit_grid(
         n_hits = hit_table.loc[hit_table['dot_name'] == dot_name].n_hits.values[0]
         c = sc.cmap(norm(n_hits))
         t.set_color(c)
-        label_names.append(dot_name)
 
     new_labels = [
         results_table.loc[results_table['dot_name'] == n][x_label].values[0] for n in label_names
