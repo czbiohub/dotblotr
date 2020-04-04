@@ -10,8 +10,7 @@ def plot_hit_grid(
         sort_by:Union[str, List[str]] = 'n_hits', x_label: str = 'dot_name',
         cmap:str = 'inferno',
 ):
-    """
-    Plot the hits
+    """ Plot the hits
 
     Parameters:
     ------------
@@ -88,3 +87,97 @@ def plot_hit_grid(
     return f, ax
 
 
+def plot_cplot(
+        results_table: pd.DataFrame,
+        vertical_var:str = 'top_hit',
+        horizontal_var:str = 'strip_id',
+        color_var:str = 'top_hit_pct',
+        cmap:str = 'inferno',
+        cbar_label:str = 'Purity'
+):
+    """ Plot the consolidated hits
+
+    Parameters:
+    ------------
+    results_table : pd.DataFrame
+        The results table output from process_dir() from which to get the strip info
+    vertical_var : str
+        The column name in results_table to use for the vertical axis variable
+    horizonta_var : str
+        The column name in results_table to use for the horizontal axis varible.
+        The default value is 'strip_id'
+    color_var : str
+        The column name in results_table to use to color to points.
+        The default value is 'top_hit_pct'
+    cmap : str
+        The name of the colormap for coloring the points. The default value is 'inferno'.
+        See: https://matplotlib.org/3.1.1/tutorials/colors/colormaps.html
+    cbar_label : str
+        The value for the colorbar label. The default value is 'Purity'
+
+    Returns:
+    --------
+    f
+        matplotlib figure object
+    ax
+        matplotlib axis object
+    """
+    # Get a list of unique genes in the results_table
+    unique_vertical_var = results_table[vertical_var].unique()
+
+    # Get a list of the unique h_vars
+    unique_horizontal_variable = results_table[horizontal_var].unique()
+
+    # make an empty lists for the plot values for the dotplot
+    h_vars = []
+    v_vars = []
+    n_hits = []
+    color_property = []
+
+    for h in unique_horizontal_variable:
+        for v in unique_vertical_var:
+            # Get the rows where the strip_id and top_hit match the strip_id and
+            strip_gene_df = results_table[(results_table[horizontal_var] == h) & (results_table[vertical_var] == v)]
+
+            # If there are any matches, add the values to plot
+            if len(strip_gene_df) > 0:
+                # add the gene/strip pair to the coords
+                h_vars.append(h)
+                v_vars.append(v)
+
+                # each row of the df is a hit, so the number of rows is the number of hits
+                pos_rows = strip_gene_df.loc[strip_gene_df.pos_hit]
+                n_hits.append(len(pos_rows))
+
+                # I wasn't sure how you wanted to calculate the color_property,
+                # so I took the mean of the hits for the gene/strip pair
+                color_property.append(strip_gene_df[color_var].mean())
+
+    # make the figure and axes
+    f, ax = plt.subplots(figsize=(10, 15))
+
+    # make the scatter plot (https://matplotlib.org/3.1.3/api/_as_gen/matplotlib.pyplot.scatter.html)
+    # x = h_vars
+    # y = gene names
+    # s: set the size by the number of hits
+    # c: set the color by the color_property
+    # cmap: use the 'magma' colormap (https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html)
+    s_plot = ax.scatter(x=h_vars, y=v_vars, s=n_hits, c=color_property, cmap=cmap)
+
+    # rotate the xticks 90 degress
+    plt.xticks(rotation=90);
+
+    # add the colorbar
+    cbar = plt.colorbar(s_plot)
+    cbar.set_label(cbar_label, rotation=270, labelpad=20, fontsize=16)
+
+    # add the sizes legend
+    plt.legend(
+        *s_plot.legend_elements("sizes", num=4),
+        bbox_to_anchor=(0., 1.02, 1., .102),
+        loc='lower left',
+        ncol=5,
+        mode="expand",
+        borderaxespad=0.);
+
+    return f, ax
