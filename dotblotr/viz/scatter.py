@@ -2,6 +2,7 @@ from typing import List, Union
 
 from matplotlib.colors import Normalize
 from matplotlib import pyplot as plt
+import numpy as np
 import pandas as pd
 
 
@@ -90,6 +91,7 @@ def plot_hit_grid(
 def plot_cplot(
         results_table: pd.DataFrame,
         vertical_var:str = 'top_hit',
+        vert_sort_order:str = 'descending',
         horizontal_var:str = 'strip_id',
         color_var:str = 'top_hit_pct',
         cmap:str = 'inferno',
@@ -103,7 +105,13 @@ def plot_cplot(
         The results table output from process_dir() from which to get the strip info
     vertical_var : str
         The column name in results_table to use for the vertical axis variable
-    horizonta_var : str
+        The default value is 'top_hit'
+    vert_sort_order : str
+        The order the vertical axis should be sorted by.
+        Can be 'ascending' (lowest value by the horizontal axis)
+        or 'descending' (highest value by the horizontal axis.
+        The default value is 'descending'.
+    horizontal_var : str
         The column name in results_table to use for the horizontal axis varible.
         The default value is 'strip_id'
     color_var : str
@@ -124,6 +132,23 @@ def plot_cplot(
     """
     # Get a list of unique genes in the results_table
     unique_vertical_var = results_table[vertical_var].unique()
+
+    # sort the vertical variable by the number of instances
+    n_vert_var = [
+        len(
+            np.unique(
+                results_table.loc[
+                    (results_table[vertical_var] == v) & results_table['pos_hit']
+                ][horizontal_var]
+            )
+        )
+        for v in unique_vertical_var
+    ]
+
+    # optionally put the highest values closest to the horizontal axis
+    if vert_sort_order == 'descending':
+        vert_var_order = np.argsort(n_vert_var)[::-1]
+    unique_vertical_var = unique_vertical_var[vert_var_order]
 
     # Get a list of the unique h_vars
     unique_horizontal_variable = results_table[horizontal_var].unique()
