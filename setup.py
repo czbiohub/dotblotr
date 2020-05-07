@@ -9,7 +9,7 @@ install_requires = [
 print(install_requires)
 
 
-setup(name='DotBlotr',
+setup(name='dotblotr',
       install_requires=install_requires,
       version='0.0.1',
       description='Tools for analyzing dot blots',
